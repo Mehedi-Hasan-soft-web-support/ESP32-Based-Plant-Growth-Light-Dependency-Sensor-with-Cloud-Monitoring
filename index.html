@@ -1,0 +1,538 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Growth Monitoring</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366F1;
+            --secondary-color: #F59E0B;
+            --text-primary: #333333;
+            --text-secondary: #64748B;
+            --bg-primary: #FFFFFF;
+            --bg-sidebar: #111827;
+            --bg-card: #FFFFFF;
+            --border-color: #E2E8F0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F1F5F9;
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-weight: 600;
+            font-size: 18px;
+            color: white;
+        }
+        
+        .nav-section {
+            margin-bottom: 30px;
+        }
+        
+        .nav-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 15px;
+        }
+        
+        .nav-items {
+            list-style: none;
+        }
+        
+        .nav-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item.active {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex-grow: 1;
+            padding: 20px 30px;
+            overflow: auto;
+        }
+        
+        .containerr {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        select, button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .error {
+            color: red;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+        }
+        
+        .success {
+            color: green;
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 4px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .api-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6366F1;
+        }
+        
+        .api-info h3 {
+            margin-bottom: 10px;
+            color: #6366F1;
+        }
+        
+        .api-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .cors-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .cors-warning h4 {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-container">
+            <svg class="logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" fill="#6366F1"/>
+                <path d="M12,2C6.5,2,2,6.5,2,12s4.5,10,10,10s10-4.5,10-10S17.5,2,12,2z M12,18c-3.3,0-6-2.7-6,6s2.7-6,6-6s6,2.7,6,6S15.3,18,12,18z" fill="white"/>
+            </svg>
+            <span class="logo-text">Plant Growth Monitoring</span>
+        </div>
+        
+        <div class="nav-section">
+            <span class="nav-title">Main Menu</span>
+            <ul class="nav-items">
+                <li class="nav-item active">
+                    <i style="color: white;">📊</i> <span style="color: white;">Dashboard</span>
+                </li>
+                <li class="nav-item">
+                    <i style="color: white;">⚙️</i> <span style="color: white;">Description</span>
+                </li>
+                <li class="nav-item">
+                    <i style="color: white;">📝</i> <span style="color: white;">Analysis</span>
+                </li>
+                <li class="nav-item">
+                    <i style="color: white;">❓</i> <span style="color: white;">Reports</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="containerr">
+            <h1>Plant Growth Monitoring</h1>
+            
+            <!-- <div class="cors-warning">
+                <h4>⚠️ CORS Issue Detected</h4>
+                <p><strong>Problem:</strong> Direct API calls to ThingSpeak are blocked by browser security (CORS policy).</p>
+                <p><strong>Solutions:</strong></p>
+                <ol>
+                    <li>Use a CORS proxy service (temporary solution)</li>
+                    <li>Set up a backend server to handle API calls</li>
+                    <li>Use ThingSpeak's JSONP method (shown below)</li>
+                </ol>
+            </div> -->
+            
+            <div class="api-info">
+                <h3>Current Channel Information</h3>
+                <p><strong>Channel ID:</strong> 2970008</p>
+                <p><strong>Author:</strong> mwa0000036866169</p>
+                <p><strong>Access:</strong> Public</p>
+                <p><strong>Read API Key:</strong> H6SO657THM3FOA4H</p>
+            </div>
+            
+            <div class="controls">
+                <div>
+                    <label for="results">Results: </label>
+                    <select id="results">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                        <option value="5000">5000</option>
+                        <option value="10000000">10000000</option>
+                        <option value="10000000000000000000000000000000000000000000000000000000">All Data</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="field">Field: </label>
+                    <select id="field">
+                        <option value="all">All Fields</option>
+                        <option value="1">Temperature</option>
+                        <option value="2">Humidity</option>
+                        <option value="3">Light Intensity</option>
+                         
+                    </select>
+                </div>
+                <div>
+                    <button id="fetchData">             </button>
+                    <button id="fetchDataCors" style="background-color: #2500fa;">Show data From Server</button>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading" style="display: none;">Loading data...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="success" class="success" style="display: none;"></div>
+            
+            <div class="table-container">
+                <table class="data-table" id="mainTable">
+                    <thead id="tableHeader">
+                        <tr>
+                            <th>Entry ID</th>
+                            <th>Timestamp</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Light Intensity</th>
+                             
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable">
+                        <!-- Sample data for demonstration -->
+                        <tr>
+                            <td>1</td>
+                            <td>No data available</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ThingSpeak API details
+        const thingSpeakReadApiKey = "H6SO657THM3FOA4H";
+        const channelNumber = 2970008;
+
+        // Hide messages function
+        function hideMessages() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+
+        // Show loading
+        function showLoading() {
+            hideMessages();
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        // Show error
+        function showError(message) {
+            hideMessages();
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        // Show success
+        function showSuccess(message) {
+            hideMessages();
+            document.getElementById('success').textContent = message;
+            document.getElementById('success').style.display = 'block';
+        }
+
+        // JSONP callback function - ThingSpeak's recommended method
+        function fetchWithJSONP() {
+            const results = document.getElementById('results').value;
+            const fieldSelection = document.getElementById('field').value;
+            
+            showLoading();
+            
+            // Create callback function name
+            const callbackName = 'thingSpeakCallback_' + Date.now();
+            
+            // Create the callback function
+            window[callbackName] = function(data) {
+                console.log('JSONP Response:', data);
+                
+                try {
+                    populateTable(data);
+                    showSuccess('Data fetched successfully using JSONP!');
+                } catch (error) {
+                    showError('Error processing data: ' + error.message);
+                }
+                
+                // Clean up
+                delete window[callbackName];
+                const script = document.getElementById('jsonp-script');
+                if (script) {
+                    script.remove();
+                }
+            };
+            
+            // Build URL with JSONP callback
+            let url;
+            if (fieldSelection === 'all') {
+                url = `https://api.thingspeak.com/channels/${channelNumber}/feeds.json?callback=${callbackName}&results=${results}`;
+            } else {
+                url = `https://api.thingspeak.com/channels/${channelNumber}/fields/${fieldSelection}.json?callback=${callbackName}&results=${results}`;
+            }
+            
+            // Create script tag for JSONP
+            const script = document.createElement('script');
+            script.id = 'jsonp-script';
+            script.src = url;
+            script.onerror = function() {
+                showError('  ');
+                delete window[callbackName];
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        // Direct fetch (will likely fail due to CORS)
+        function fetchDirectAPI() {
+            const results = document.getElementById('results').value;
+            const fieldSelection = document.getElementById('field').value;
+            
+            showLoading();
+            
+            let url;
+            if (fieldSelection === 'all') {
+                url = `https://api.thingspeak.com/channels/${channelNumber}/feeds.json?api_key=${thingSpeakReadApiKey}&results=${results}`;
+            } else {
+                url = `https://api.thingspeak.com/channels/${channelNumber}/fields/${fieldSelection}.json?api_key=${thingSpeakReadApiKey}&results=${results}`;
+            }
+            
+            console.log('Fetching from URL:', url);
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Direct API Response:', data);
+                    populateTable(data);
+                    showSuccess('Data fetched successfully via direct API!');
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showError(`Direct API failed (likely CORS): ${error.message}`);
+                });
+        }
+
+        // Populate table with data
+        function populateTable(data) {
+            const feeds = data.feeds;
+            const dataTable = document.getElementById('dataTable');
+            
+            // Clear previous content
+            dataTable.innerHTML = '';
+            
+            if (!feeds || feeds.length === 0) {
+                dataTable.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999;">No data available</td></tr>';
+                return;
+            }
+            
+            // Insert rows
+            feeds.forEach(feed => {
+                const tr = document.createElement('tr');
+                
+                // Entry ID
+                const entryTd = document.createElement('td');
+                entryTd.textContent = feed.entry_id || '-';
+                tr.appendChild(entryTd);
+                
+                // Timestamp
+                const timestampTd = document.createElement('td');
+                if (feed.created_at) {
+                    const date = new Date(feed.created_at);
+                    timestampTd.textContent = date.toLocaleString();
+                } else {
+                    timestampTd.textContent = '-';
+                }
+                tr.appendChild(timestampTd);
+                
+                // Fields 1-8
+                for (let i = 1; i <= 8; i++) {
+                    const fieldTd = document.createElement('td');
+                    const value = feed[`field${i}`];
+                    fieldTd.textContent = value !== null && value !== undefined ? value : '-';
+                    tr.appendChild(fieldTd);
+                }
+                
+                dataTable.appendChild(tr);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('fetchData').addEventListener('click', fetchWithJSONP);
+        document.getElementById('fetchDataCors').addEventListener('click', fetchDirectAPI);
+
+        // Auto-fetch on page load using JSONP
+        window.addEventListener('load', function() {
+            setTimeout(fetchWithJSONP, 1000); // Delay to ensure DOM is ready
+        });
+    </script>
+</body>
+</html>
