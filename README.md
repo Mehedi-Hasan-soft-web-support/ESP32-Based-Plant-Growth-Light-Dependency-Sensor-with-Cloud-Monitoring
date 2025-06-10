@@ -3,6 +3,7 @@
 This project is a smart environmental monitoring system using the **ESP32 microcontroller**. It measures **temperature**, **humidity**, and **light intensity**, helping to understand how these parameters affect **plant growth**, especially light dependency. The data is displayed on an **I2C LCD screen** and sent to **ThingSpeak** for cloud storage and visualization. The system also provides real-time alerts using an **LED** and **buzzer** after successful data uploads.
 
 ---
+link : https://mehedi-hasan-soft-web-support.github.io/ESP32-Based-Plant-Growth-Light-Dependency-Sensor-with-Cloud-Monitoring/ 
 
 ## 🌿 Project Objective
 
